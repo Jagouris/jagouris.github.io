@@ -1,6 +1,6 @@
 // pageQuery v1.1.1
 // MIT License
-// Copyright (c) 2025 Jagaurus (https://github.com/Jagaurus)
+// Copyright (c) 2025 Jagorak (https://github.com/Jagorak)
 
 (function(){
 	let mousePos = {x: 0, y: 0};
