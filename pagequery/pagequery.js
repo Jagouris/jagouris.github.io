@@ -1,397 +1,348 @@
-// pageQuery v1.1.2
-// MIT License
-// Copyright (c) 2025 Jagorak (https://github.com/Jagorak)
+//pageQuery v1.2.0 copyright (c) Jagorak (https://github.com/Jagorak/)
 
 (function(){
-	let mousePos = {x: 0, y: 0};
-	let prevMousePos = {x: 0, y: 0};
-	let activeBinder = null;
-	let binders = [];
-	let binderNames = [];
-	let zIndex = [];
+   let mousePos = {x: 0, y: 0};
+   let prevMousePos = {x: 0, y: 0};
 
-	window.onload = function(){
-		init();
-	};
-	
-	window.pageQuery = function(){
-		init();
-	};
+   const ID_RE = /[:]/;
+   const PQ_RE = /[%]/;
+   const PX_RE = /[px]/;
 
-	function init(){
-		document.addEventListener('mouseup', function(){
-			if(activeBinder) activeBinder.makeInactive();
-		}, false);
+   let binderList = [];
+   let binderNames = [];
+   let zIndex = [];
+   let activeBinder;
 
-		document.addEventListener('mousemove', function(e){
-			prevMousePos = {
-				x: mousePos.x,
-				y: mousePos.y
-			};
+   window.onload = function(){
+      init();
+   };
 
-			mousePos = {
-				x: e.clientX,
-				y: e.clientY
-			};
+   window.pageQuery = function(){
+      init();
+   };
 
-			if(activeBinder){
-				activeBinder.pos.x += mousePos.x-prevMousePos.x;
-				activeBinder.pos.y += mousePos.y-prevMousePos.y;
+   function init(){
+      let binderNodes = document.querySelectorAll("BINDER");
 
-				activeBinder.translate(activeBinder.pos.x, activeBinder.pos.y);
-			}
-		}, false);
+      for(let binder of binderNodes){
+         let binderName = binder.id;
+         let i = binderList.push(new Binder(binder))-1;
 
-		let binderElements = document.getElementsByTagName("BINDER");
-		
-		for(let binder of binderElements){
-			loadBinder(binder);
-		}
-	}
+         if(binderName) binderNames[binderName] = i;
+         binderNames[i.toString()] = i;
 
-	function Binder(srcElement){
-		this.srcElement = srcElement;
-		this.pos = {x: 0, y: 0};
-		this.shape = {width: 0, height: 0};
-		this.pages = [];
-		this.pageNames = [];
-		//Currentpage always contains the index of pages[] and not the pageName
-		this.currentPage = undefined;
+         zIndex.push(i);
+         binderList[i].node.style.zIndex = zIndex.length-1;
+      }
 
-		this.init = function(){
-			this.srcElement.style.position = "fixed";
+      document.addEventListener('mouseup', function(){
+         if(activeBinder) activeBinder.makeInactive();
+      }, false);
 
-			let pageElements = this.srcElement.getElementsByTagName("PAGE");
+      document.addEventListener('mousemove', function(e){
+         prevMousePos = {
+            x: mousePos.x,
+            y: mousePos.y
+         };
 
-			for(let page of pageElements){
-				i = this.pages.push(page)-1;
-				
-				let pageName = page.getAttribute("id");
-				
-				if(pageName){
-					this.pageNames[pageName] = i;
-				}
-				
-				this.pageNames[i.toString()] = i;
-				
-				if(this.currentPage === undefined) this.currentPage = i;
-				
-				this.hidePage(i);
-			}
+         mousePos = {
+            x: e.clientX,
+            y: e.clientY
+         };
 
-			if(this.currentPage === undefined){
-				console.log(this.srcElement.id);
+         if(activeBinder){
+            activeBinder.pos.x += mousePos.x-prevMousePos.x;
+            activeBinder.pos.y += mousePos.y-prevMousePos.y;
 
-				return false;
-			}
-			
-			this.showPage(this.currentPage);
-			
-			this.updateCurrentStyle();
-			
-			this.resize(
-				this.srcElement.getAttribute("width"),
-				this.srcElement.getAttribute("height")
-			);
-			
-			this.updateCurrentStyle();
-			
-			this.translate(
-				this.srcElement.getAttribute("x"),
-				this.srcElement.getAttribute("y")
-			);
-			
-			if(this.srcElement.getAttribute("visible") == "false") this.hide();
-			
-			return true;
-		};
+            activeBinder.translateX(activeBinder.pos.x);
+            activeBinder.translateY(activeBinder.pos.y);
+         }
+      }, false);
+   }
 
-		this.openPage = function(pageID){
-			if(typeof pageID !== "number"){
-				pageID = this.pageNames[pageID];
-			}
-			
-			if(this.pages[pageID]){
-				this.hidePage(this.currentPage);
-				this.showPage(pageID);
-				this.currentPage = pageID;
-			}else{
-				console.log("That page doesn't exist.");
-			}
-		};
+   window.translateBinder = function(x = null, y = null, binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		this.makeActive = function(){
-			this.updateCurrentStyle();
-			this.srcElement.style.userSelect = "none";
+      binderList[binderID].readNewCSS();
+      binderList[binderID].translateX(x);
+      binderList[binderID].translateY(y);
+   };
 
-			activeBinder = this;
-		};
+   window.resizeBinder = function(width = null, height = null, binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		this.makeInactive = function(){
-			this.srcElement.style.userSelect = "auto";
+      binderList[binderID].readNewCSS();
+      binderList[binderID].resize(width, height);
+   };
 
-			activeBinder = null;
-		};
+   window.bringToFront = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		this.updateCurrentStyle = function(){
-			let currentStyle = window.getComputedStyle(this.srcElement);
+      let i = zIndex.indexOf(binderID);
 
-			this.pos = {
-				x: parseInt(currentStyle.getPropertyValue("left")),
-				y: parseInt(currentStyle.getPropertyValue("top"))
-			};
-			
-			this.shape = {
-				width:
-					parseInt(currentStyle.getPropertyValue("width")) +
-					parseInt(currentStyle.getPropertyValue("padding-left")) +
-					parseInt(currentStyle.getPropertyValue("padding-right")),
-				height:
-					parseInt(currentStyle.getPropertyValue("height")) +
-					parseInt(currentStyle.getPropertyValue("padding-top")) +
-					parseInt(currentStyle.getPropertyValue("padding-bottom"))
-			};
-		};
+      zIndex.splice(i, 1);
 
-		this.translate = function(x, y){
-			if(x || x == 0){
-				if(typeof x !== "number"){
-					if(x.includes("%")){
-						x = (window.innerWidth*parseInt(x)/100)-(this.shape.width*parseInt(x)/100);
-					}else{
-						x = parseInt(x);
-					}
-				}
+      for(i; i < zIndex.length; i++){
+         binderList[zIndex[i]].node.style.zIndex--;
+      }
 
-				this.srcElement.style.left = x;
-			}
-			
-			if(y || y == 0){
-				if(typeof y !== "number"){
-					if(y.includes("%")){
-						y = (window.innerHeight*parseInt(y)/100)-(this.shape.height*parseInt(y)/100);
-					}else{
-						y = parseInt(y);
-					}
-				}
+      zIndex[i] = binderID;
+      binderList[binderID].node.style.zIndex = i;
+   };
 
-				this.srcElement.style.top = y;
-			}
-		};
-		
-		this.resize = function(width, height){
-			if(width || width == 0){
-				if(typeof width !== "number"){
-					if(width.includes("%")){
-						width = window.innerWidth*parseInt(width)/100;
-					}else{
-						width = parseInt(width);
-					}
-				}
+   window.openBinder = function(binderID){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-				this.srcElement.style.width = width;
-			}
-			
-			if(height || height == 0){
-				if(typeof height !== "number"){
-					if(height.includes("%")){
-						height = window.innerWidth*parseInt(height)/100;
-					}else{
-						height = parseInt(height);
-					}
-				}
+      bringToFront(binderID);
+      binderList[binderID].show();
+   };
 
-				this.srcElement.style.height = height;
-			}
-		};
+   window.closeBinder = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		this.hide = function(){
-			this.srcElement.style.display = "none";
-		};
+      binderList[binderID].hide();
+   };
 
-		this.show = function(){
-			this.srcElement.style.display = "block";
-		};
+   window.getBinder = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		this.hidePage = function(i){
-			this.pages[i].style.display = "none";
-		};
+      if(binderList[binderID]) return binderList[binderID];
+   };
 
-		this.showPage = function(i){
-			this.pages[i].style.display = "block";
-		};
-	}
+   window.openPage = function(pageID, binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-	function loadBinder(srcElement){
-		let i = binders.push(new Binder(srcElement))-1;
-		
-		let success = binders[i].init();
-		
-		if(!success){
-			console.log("You must include at least one <page> tag in your binder.");
-			binders.splice(i, 1);
-			
-			return;
-		}
-		
-		//store the id as well as the index as a string (lazy solution for now)
-		let binderName = srcElement.getAttribute("id");
-		
-		if(binderName){
-			binderNames[binderName] = i;
-		}
-		
-		binderNames[i.toString()] = i;
-		
-		zIndex.push(i);
-		
-		console.log(binders[i].srcElement);
-		binders[i].srcElement.style.zIndex = zIndex.length-1;
-	}
-	
-	function getBinderIndex(binderID){
-		if(typeof binderID === "string") return binderNames[binderID];
-		else return binderID;
-	}
+      binderList[binderID].openPage(pageID);
+   };
 
-	window.bringToFront = function(binderID){
-		binderID = getBinderIndex(binderID);
-		
-		let i = zIndex.indexOf(binderID);
+   window.prevPage = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		zIndex.splice(i, 1);
+      let currentPage = binderList[binderID].currentPage;
+      if (currentPage > 0) binderList[binderID].openPage(currentPage-1);
+   };
 
-		for(i; i < zIndex.length; i++){
-			binders[zIndex[i]].srcElement.style.zIndex--;
-		}
+   window.nextPage = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-		zIndex[i] = binderID;
-		binders[binderID].srcElement.style.zIndex = i;
-	};
+      let currentPage = binderList[binderID].currentPage;
+      if (currentPage < binderList[binderID].pageList.length) binderList[binderID].openPage(currentPage+1);
+   };
 
-	
-	//this doesn't work yet
-	window.defineBinder = function(srcElement, binderID = null){
-		if(srcElement.tagName != "BINDER"){
-			console.log("To load a new binder you must send a <binder> element.");
+   window.getCurrentPage = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-			return;
-		}
+      return binderList[binderID].currentPage;
+   };
 
-		loadBinder(srcElement);
-	};
+   window.dragBinder = function(binderID = null){
+      if(!binderID) binderID = findParentBinder(event.srcElement);
+      else binderID = getBinderIndex(binderID);
 
-	window.findParentBinder = function(srcElement){
-		let parentNode = srcElement.parentNode;
+      binderList[binderID].makeActive();
+      bringToFront(binderID);
+   };
 
-		while(parentNode){
-			if(parentNode.tagName == "BINDER"){
-				if(parentNode.id){
-					let binderID = getBinderIndex(parentNode.id);
-					
-					return binderID;
-				}else{
-					for(let binderID in binders){
-						if(binders[binderID].srcElement == parentNode){
-							return id;
-						}
-					}
-				}
-			}
+   window.getBinderIndex = function(binderID = null){
+      if(typeof binderID === "number") return binderID;
+      else if(typeof binderID === "string") return binderNames[binderID];
+      else if(typeof binderID === "object") return binderList.indexOf(binderID);
+   };
 
-			parentNode = parentNode.parentNode;
-		}
+   window.findParentBinder = function(node){
+      let parentNode = node.parentNode;
 
-		console.log("This element is not part of a binder object.");
-	};
+      while(parentNode){
+         if(parentNode.tagName == "SPAN"){
+            let id = parentNode.id.split(ID_RE);
 
-	window.getBinder = function(binderID){
-		binderID = getBinderIndex(binderID);
-		
-		if(binders[binderID]){
-			return binders[binderID];
-		}else{
-			console.log("That binder doesn't exist.");
+            if(id[0] == "binder"){
+               return getBinderIndex(id[1]);
+            }
+         }
 
-			return;
-		}
-	};
+         parentNode = parentNode.parentNode;
+      }
+   };
+   //https://developer.mozilla.org/en-US/docs/Web/API/Document/createDocumentFragment
+   function Binder(node){
+      this.node = convertToSpan(node);
+      this.pos = {x: 0, y: 0};
+      this.dim = {width: 0, height: 0};
+      this.pageList = [];
+      this.pageNames = [];
+      this.currentPage = 0;
 
-	window.closeBinder = function(binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+      this.init = function(){
+         let id = this.node.id;
+         if(!id) id = (binderList.length).toString();
+         this.node.id = "binder:" + id;
 
-		binders[binderID].hide();
-	};
+         this.node.style.display = "block";
 
-	window.openBinder = function(binderID){
-		if(!binderID){
-			console.log("Please specify a binder that you'd like to open.");
+         let pageNodes = this.node.querySelectorAll("PAGE");
 
-			return;
-		}
-		
-		binderID = getBinderIndex(binderID);
+         for(let page of pageNodes){
+            page = convertToSpan(page);
+            let pageIndex = this.pageList.push(page)-1;
+            
+            let id = page.id;
+            
+            if(id) this.pageNames[page.id] = pageIndex;
+            else id = (this.pageList.length).toString();
+            page.id = "page:" + id;
 
-		binders[binderID].show();
-		bringToFront(binderID);
-	};
+            this.pageNames[pageIndex.toString()] = pageIndex;
 
-	window.dragBinder = function(binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+            page.style.display = "none";
+         }
 
-		binders[binderID].makeActive();
-		bringToFront(binderID);
-	};
+         this.node.style.position = "fixed";
 
-	window.translateBinder = function(x, y, binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+         this.openPage(0);
 
-		binders[binderID].updateCurrentStyle();
-		binders[binderID].translate(x, y);
-	};
-	
-	window.resizeBinder = function(width, height, binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+         this.readNewCSS();
 
-		binders[binderID].updateCurrentStyle();
-		binders[binderID].resize(width, height);
-	};
+         this.resize(
+            this.node.attributes["width"],
+            this.node.attributes["height"]
+         );
 
-	window.prevPage = function(binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+         this.readNewCSS();
 
-		let currentPage = binders[binderID].currentPage;
+         this.translateX(this.node.attributes["x"]);
+         this.translateY(this.node.attributes["y"]);
 
-		if (binders[binderID].currentPage == 0) console.log("There are no earlier pages.");
-		else binders[binderID].openPage(currentPage-1);
-	};
+         if(this.node.attributes["hidden"] !== undefined){
+            if(this.node.attributes["hidden"] != "false") this.node.style.display = "none";
+         }
+      };
 
-	window.nextPage = function(binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+      this.makeActive = function(){
+         this.readNewCSS();
+         this.node.style.userSelect = "none";
+         activeBinder = this;
+      };
 
-		let currentPage = binders[binderID].currentPage;
+      this.makeInactive = function(){
+         this.node.style.userSelect = "auto";
+         activeBinder = null;
+      };
 
-		if(currentPage == binders[binderID].pages.length-1) console.log("There are no later pages.");
-		else binders[binderID].openPage(currentPage+1);
-	};
+      this.openPage = function(pageID){
+         if(typeof pageID === "string") pageID = this.pageNames[pageID];
 
-	window.openPage = function(pageID, binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+         this.pageList[this.currentPage].style.display = "none";
+         this.pageList[pageID].style.display = "block";
 
-		binders[binderID].openPage(pageID);
-	};
+         this.currentPage = pageID;
+      };
 
-	window.getCurrentPage = function(binderID = null){
-		if(!binderID) binderID = findParentBinder(event.srcElement);
-		else binderID = getBinderIndex(binderID);
+      this.hide = () => this.node.style.display = "none";
+      this.show = () => this.node.style.display = "block";
 
-		return binders[binderID].currentPage;
-	};
+      this.readNewCSS = function(){
+         let CSS = window.getComputedStyle(this.node);
+
+         this.pos = {
+            x: parseInt(CSS["left"]),
+            y: parseInt(CSS["top"])
+         };
+
+         this.dim = {
+            width:
+               parseInt(CSS["width"]) +
+               parseInt(CSS["padding-left"]) +
+               parseInt(CSS["padding-right"]),
+            height:
+               parseInt(CSS["height"]) +
+               parseInt(CSS["padding-top"]) +
+               parseInt(CSS["padding-bottom"])
+         };
+      };
+
+      this.translateX = function(x){
+         if(typeof x === "number"){
+            this.node.style.left = x.toString() + "px";
+         }else{
+            if(PQ_RE.test(x)){
+               x = parseInt(x);
+               x = (window.innerWidth*x/100)-(this.dim.width*x/100);
+
+               this.node.style.left = x.toString() + "px";
+            }else if(PX_RE.test(x)) this.node.style.left = x;
+         }
+      };
+
+      this.translateY = function(y){
+         if(typeof y === "number"){
+            this.node.style.top = y.toString() + "px";
+         }else{
+            if(PQ_RE.test(y)){
+               y = parseInt(y);
+               y = (window.innerHeight*y/100)-(this.dim.height*y/100);
+
+               this.node.style.top = y.toString() + "px";
+            }else if(PX_RE.test(y)) this.node.style.top = y;
+         }
+      };
+
+      this.resize = function(width, height){
+         if(typeof width === "number"){
+            this.node.style.top = width.toString() + "px";
+         }else{
+            if(PQ_RE.test(width)){
+               width = window.innerWidth*parseInt(width)/100;
+
+               this.node.style.width = width.toString() + "px";
+            }else if(PX_RE.test(width)) this.node.style.width = width;
+         }
+
+         if(typeof height === "number"){
+            this.node.style.height = height.toString() + "px";
+         }else{
+            if(PQ_RE.test(height)){
+               height = window.innerHeight*parseInt(height)/100;
+
+               this.node.style.height = height.toString() + "px";
+            }else if(PX_RE.test(height)) this.node.style.height = height;
+         }
+      };
+
+      this.init();
+   }
+
+   function convertToSpan(oldNode){
+      let newNode = document.createElement("SPAN");
+
+      for(let attribute of oldNode.attributes) newNode.attributes[attribute.name] = attribute.value;
+
+      for(let child of oldNode.children) newNode.appendChild(child.cloneNode(true));
+
+      oldNode.parentNode.insertBefore(newNode, oldNode);
+
+      copyStyle(oldNode, newNode);
+      newNode.id = oldNode.id;
+
+      oldNode.remove();
+
+      return newNode;
+   }
+
+   function copyStyle(oldNode, newNode){
+      oldStyle = window.getComputedStyle(oldNode);
+      newStyle = window.getComputedStyle(newNode);
+
+      for(let rule of oldStyle) if(oldStyle[rule] != newStyle[rule]) newNode.style[rule] = oldStyle[rule];
+   }
 })();
