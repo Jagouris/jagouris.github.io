@@ -111,7 +111,7 @@
 				
 <pre><code class="language-markup">&lt;binder&gt&lt;page&gtcontent&lt;/page&gt&lt;/binder&gt</code></pre>
 				<p class="text">All <code class="language-markup">&lt;binder /&gt;</code> tags will load automatically on startup, and they need to contain a <code class="language-markup">&lt;page /&gt;</code> tag which has your content inside of it.</p>
-				<p class="text">You can give your binder an <code class="language-markup small">id</code> attribute, a <code class="language-markup small">class</code> attribute to define its style, <code class="language-markup small">width</code> and <code class="language-markup small">height</code> attributes to define the width and height, <code class="language-markup small">x</code> and <code class="language-markup small">y</code> attributes to define the binder's position on the page, as well as a <code class="language-markup small">visible</code> attribute which determines if a binder is hidden at startup.</p>
+				<p class="text">You can give your binder an <code class="language-markup small">id</code> attribute, a <code class="language-markup small">class</code> attribute to define its style, <code class="language-markup small">width</code> and <code class="language-markup small">height</code> attributes to define the width and height, <code class="language-markup small">x</code> and <code class="language-markup small">y</code> attributes to define the binder's position on the page, as well as a <code class="language-markup small">hidden/code> attribute which determines if a binder is hidden at startup.</p>
 				<p class="text">You can refer to the <a href="https://github.com/Jagorak/pageQuery/blob/main/documentation.md">documentation</a> on Github to find a more detailed help.</p>
 				
 				<table width="100%">
@@ -132,7 +132,7 @@
 			</page>
 		</binder>
 		
-		<binder id="example" class="basic-binder" x="50%" y="50%" visible="false">
+		<binder id="example" class="basic-binder" x="50%" y="50%" hidden>
 			<page>
 				<p>This is intro page.</p>
 				<a href="#" onclick="openPage('example-page')">Click here to open "example-page!"</a>
