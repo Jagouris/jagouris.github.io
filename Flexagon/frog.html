@@ -1,0 +1,119 @@
+<html lang="en">
+	<head>
+		<title>Frog</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		
+		<script type="text/javascript" src="pagequery.js"></script>
+		
+		<style>
+			* {
+				user-select: none;
+			}
+		</style>
+		<script>
+			let timer, oldTime, newTime;
+			let score = 0;
+			let clockDisplay, scoreDisplay;
+			let x, y;
+			
+			window.onload = function(){
+				pageQuery();
+				
+				window.addEventListener("resize", function(){
+					translateBinder("50%", null, "info");
+				}, false);
+				
+				clockDisplay = document.querySelector("#clock");
+				scoreDisplay = document.querySelectorAll("#score");
+			}
+			
+			function game(){
+				oldTime = newTime;
+				newTime = Date.now();
+				
+				timer -= newTime-oldTime;
+				
+				translateBinder(
+					Math.sin(timer/100)*50+x,
+					Math.cos(timer/100)*50+y,
+					"frog"
+				);
+				
+				clockDisplay.innerHTML = (timer/1000).toString() + " seconds!";
+				scoreDisplay[0].innerHTML = score.toString() + " points!";
+				
+				if(timer > 0){
+					window.requestAnimationFrame(game);
+				}else{
+					endGame();
+				}
+			}
+			
+			function endGame(){
+				openPage("result", "info");
+				scoreDisplay[1].innerHTML = score.toString() + " points!";
+				closeBinder("frog");
+			}
+			
+			function startGame(){
+				score = 0;
+				timer = 30000;
+				oldTime = Date.now();
+				newTime = Date.now();
+				
+				moveFrog();
+				
+				openPage("game", "info");
+				openBinder("frog");
+				
+				game();
+			}
+			
+			function frogClick(){
+				score++;
+				timer += 1000;
+				moveFrog();
+			}
+			
+			function moveFrog(){
+				x = Math.random()*window.innerWidth;
+				y = Math.random()*window.innerHeight;
+			}
+		</script>
+	</head>
+	<body style="background: url(img/bg.png)">
+		<binder id="info" class="basic-binder" width="600px" x="50%" y="50%">
+			<page id="rules">
+				<p class="title">Frog Game</p>
+				<p class="subtitle">Rules:</p>
+				<p class="text frog">• A frog will appear on the screen</p>
+				<p class="text frog">• By clicking the frog you get <b>+1 point</b> and <b>+1 second</b> on the timer</p>
+				<p class="text frog">• The game will begin with <b>30 seconds</b> on the clock</p>
+				<p class="text frog">• The game is over when the clock reaches <b>zero.</b></p>
+				<p style="margin-top: 20px; text-align: center"><a href="#" onclick="startGame()" class="nav" style="color: #f00; font-size: 30px">Click here to start the game!</a></p>
+			</page>
+			<page id="game">
+				<table>
+					<td width="300">
+						<p class="subtitle">Time left:</p>
+						<p id="clock" class="title" style="color: #f00">30.000 seconds</p>
+					</td>
+					<td width="300">
+						<p class="subtitle">Score:</p>
+						<p id="score" class="title" style="color: #f00">0 points</p>
+					</td>
+				</table>
+			</page>
+			<page id="result" style="text-align: center">
+				<p class="title" style="color: #f00">Game Over!</p>
+				<p class="subtitle">Final Score:</p><p class="title" id="score"></p>
+				<p class="title"><a href="#" onclick="startGame()" class="nav" style="size: 40px">TRY AGAIN!</a></p>
+			</page>
+		</binder>
+		<binder id="frog" width="153" hidden>
+			<page>
+				<img src="img/frog2.png" width="50%" onclick="frogClick()" draggable="false">
+			</page>
+		</binder>
+	</body>
+</html>
