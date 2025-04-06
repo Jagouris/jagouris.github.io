@@ -60,11 +60,11 @@
 			<div style="text-align: center;" class="title"><img src="img/logo2.png" width="120" height="120" title="Flexagon" /> <span class="title" style="position: relative; top: -45">Flexagon</span></div>
 			<page>
 				<p class="subtitle">What is Flexagon?</p>
-				<p class="text">Flexagon is a lightweight Javascript library aimed at making it easier to structure dynamic webpages.</p>
+				<p class="text">Flexagon is an easy, lightweight Javascript library which is aimed to make it easier to structure dynamic webpages.</p>
 				<p class="text">Flexagon defines portable page containers with custom HTML elements (<code class="language-markup">&lt;binder /&gt;</code> and <code class="language-markup">&lt;page /&gt;</code>), as well as simple functions to manipulate them.</p>
-				<p class="text">For example, on this page, a binder is defined like this:</p>
+				<p class="text">For example, a simple binder is defined like this:</p>
 				
-<pre><code class="language-markup">&lt;binder id="example" class="basic-binder" x="50%" y="50%"&gt;
+<pre><code class="language-markup">&lt;binder id="example"&gt;
 	&lt;page&gt;
 		&lt;p&gt;This is intro page.&lt;/p&gt;
 		&lt;a onclick="openPage('example-page')"&gt;Click here to open "example-page!"&lt;/a&gt;
@@ -94,8 +94,8 @@
 				<p class="text">Once imported, Flexagon loads automatically (more complex uses may require an <code class="language-js small">onload</code> event), and you can start by wrapping your content with a binder:</p>
 				
 <pre><code class="language-markup">&lt;binder&gt&lt;page&gtcontent&lt;/page&gt&lt;/binder&gt</code></pre>
-				<p class="text">All <code class="language-markup">&lt;binder /&gt;</code> tags will load automatically on startup, and they need to contain a <code class="language-markup">&lt;page /&gt;</code> tag which has your content inside of it.</p>
-				<p class="text">You can give your binder an <code class="language-markup small">id</code> attribute, a <code class="language-markup small">class</code> attribute to define its style, <code class="language-markup small">width</code> and <code class="language-markup small">height</code> attributes to define the width and height, <code class="language-markup small">x</code> and <code class="language-markup small">y</code> attributes to define the binder's position on the page, as well as a <code class="language-markup small">hidden</code> attribute which determines if a binder is hidden at startup.</p>
+				<p class="text">All <code class="language-markup">&lt;binder /&gt;</code> tags will load automatically on startup, and they need to contain at least one <code class="language-markup">&lt;page /&gt;</code>.</p>
+				<p class="text">You can give your binder any attributes that you would give a normal HTML element, including event listeners like <code class="language-markup small">onclick</code>. Binders can be referred to by their <code class="language-markup small">id</code> attribute, and they can also be given a <code class="language-markup small">hidden</code> attribute if you want a binder to be hidden at startup.</p>
 				<p class="text">You can refer to the <a href="https://github.com/Jagorak/Flexagon/blob/main/documentation.md">documentation</a> on Github to find a more detailed help.</p>
 			</page>
 			<page>
