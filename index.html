@@ -64,6 +64,8 @@
         </style>
         
         <script type="text/javascript">
+			//https://developers.google.com/blogger/docs/3.0/reference/posts#resource
+		
             let blog = {
                 id: "2354829316788835637",
                 key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
@@ -71,20 +73,33 @@
 			
 			let parser = new DOMParser();
             
-            window.addEventListener("load", () => {
+			window.addEventListener("load", () => {
+                let request = new Request(
+					"https://www.googleapis.com/blogger/v3/blogs/" + blog.id + "/posts?fetchImages=true&key=" + blog.key
+				);
+                
+				fetch(request).then((response) => {
+					//console.log(response);
+				
+					response.json().then((data) => {
+						printPostList(data);
+					});
+				});
+            }, false);
+			
+            /*window.addEventListener("load", () => {
                 let request = new XMLHttpRequest();
                 
-                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts?key=" + blog.key, true);
-                request.send();
+                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id + "/posts?fetchImages=true&key=" + blog.key, true)
+				request.responseType = "json";
+				request.send();
                 
                 request.onreadystatechange = () => {
                     if(request.readyState == 4){
-                        let data = JSON.parse(request.response);
-                        
-                        printPostList(data);
+						printPostList(request.response);
                     }
                 }
-            }, false);
+            }, false);*/
             
             function printPostList(data){
                 let canvas = new OffscreenCanvas(70, 70);
@@ -100,16 +115,24 @@
 					
 					let html = parser.parseFromString(post.content, "text/html");
 					
-					let thumbnail = html.querySelector("#thumbnail");
-					if(thumbnail) binder.querySelector("#thumbnail").src = thumbnail.src;
+					//console.log(post.images[0].url);
+					
+					if(post.images[0].url){
+						let request = new Request(post.images[0].url);
+						
+						fetch(request).then((response) => {
+							console.log(response);
+						});
+					
+						binder.querySelector("#thumbnail").src = post.images[0].url + "?key=" + blog.key;
+					}
 					
 					let img = binder.querySelector("#thumbnail");
-					img.crossOrigin = "anonymous";
 					
 					binder.querySelector("#thumbnail").addEventListener("load", ()=>{
 						ctx.drawImage(img, 0, 0, 70, 70);
 						
-						console.log(ctx.getImageData(0, 0, canvas.width, canvas.height));
+						//console.log(ctx.getImageData(0, 0, canvas.width, canvas.height));
 					}, false);
 					
 					let text = html.querySelector("p");
@@ -128,7 +151,7 @@
                 request.send();
                 
                 request.onreadystatechange = () => {
-                    if(request.readyState == 4) console.log(request.response);
+                    //if(request.readyState == 4) console.log(request.response);
                 }
             }
         </script>
@@ -153,3 +176,5 @@
 			</div>
     </body>
 </html>
+
+<!--https://stackoverflow.com/questions/74452866/how-preview-a-html-file-github-codespaces-->
