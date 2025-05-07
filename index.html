@@ -104,6 +104,7 @@
 					if(thumbnail) binder.querySelector("#thumbnail").src = thumbnail.src;
 					
 					let img = binder.querySelector("#thumbnail");
+					img.crossOrigin = "anonymous";
 					
 					binder.querySelector("#thumbnail").addEventListener("load", ()=>{
 						ctx.drawImage(img, 0, 0, 70, 70);
