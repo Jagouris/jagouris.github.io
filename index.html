@@ -1,9 +1,154 @@
-<html>
-  <head>
-    <script>
-      window.onload = function(){
-        window.location.href = "https://github.com/Jagorak";
-      }
-    </script>
-  </head>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Title</title>
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+		
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+        
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                font-family: Georgia;
+            }
+			
+			body {
+				background: #e0effc;
+			}
+			
+			#thumbnail {
+				display: inline-block;
+			}
+			
+			#summary {
+				display: inline-block;
+			}
+			
+			#binder {
+				margin: 0 auto;
+				width: 700px;
+				display: none;
+				height: 70px;
+			}
+			
+			#binder:hover {
+				background: linear-gradient(to right, gray, transparent)
+			}
+			
+			#title {
+				font-weight: bold;
+				font-size: 20px;
+				padding-bottom: 2px;
+				border-bottom: 1px solid #000;
+				margin-top: 4px;
+				font-family: "Open Sans";
+				padding-left: 14px;
+			}
+			
+			a {
+				color: #000;
+				text-decoration: none;
+			}
+			
+			h1 {
+				font-family: "Cal Sans";
+				font-size: 46px;
+			}
+        </style>
+        
+        <script type="text/javascript">
+            let blog = {
+                id: "2354829316788835637",
+                key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
+            };
+			
+			let parser = new DOMParser();
+            
+            window.addEventListener("load", () => {
+                let request = new XMLHttpRequest();
+                
+                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts?key=" + blog.key, true);
+                request.send();
+                
+                request.onreadystatechange = () => {
+                    if(request.readyState == 4){
+                        let data = JSON.parse(request.response);
+                        
+                        printPostList(data);
+                    }
+                }
+            }, false);
+            
+            function printPostList(data){
+                let canvas = new OffscreenCanvas(70, 70);
+				let ctx = canvas.getContext("2d");
+				//let bounding = canvas.getBoundingClientRect();
+                ctx.fillRect(0,0,50,50)
+                for(let post of data.items){
+                    let binder = document.querySelector("#binder").cloneNode(true);
+                    
+                    binder.querySelector("#title").innerText = post.title;
+                    binder.style.display = "block";
+					document.body.appendChild(binder);
+					
+					let html = parser.parseFromString(post.content, "text/html");
+					
+					let thumbnail = html.querySelector("#thumbnail");
+					if(thumbnail) binder.querySelector("#thumbnail").src = thumbnail.src;
+					
+					let img = binder.querySelector("#thumbnail");
+					
+					binder.querySelector("#thumbnail").addEventListener("load", ()=>{
+						ctx.drawImage(img, 0, 0, 70, 70);
+						
+						console.log(ctx.getImageData(0, 0, canvas.width, canvas.height));
+					}, false);
+					
+					let text = html.querySelector("p");
+					if(text) binder.querySelector("#intro").innerText = text.innerText;
+					
+					for(let link of binder.querySelectorAll("A")){
+						link.href = link.href + "?id=" + post.id;
+					}
+                }
+            }
+            
+            function getSpecificPost(){
+                let request = new XMLHttpRequest();
+                
+                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts?key=" + blog.key, true);
+                request.send();
+                
+                request.onreadystatechange = () => {
+                    if(request.readyState == 4) console.log(request.response);
+                }
+            }
+        </script>
+    </head>
+    <body>
+		<div style="width: 700px; margin: 0 auto; text-align: center; padding: 30px"><h1>Animation</h1></div>
+		
+		<canvas width="70" height="70" style="margin: 0 auto"></canvas>
+			<div id="binder" style="position: relative">
+				<!--<div style="display: inline-block; background: #f00; width: 70px; height: 70px">-->
+					<a href="post.htm">
+						<img id="thumbnail" width="70px" height="70px"/>
+					
+				<!--</div>-->
+				<div id="summary" style="width: 610px;  vertical-align: top;">
+					<p id="title"></p>
+					<p id="intro" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 7px; margin-left: 14px;"></p>
+				</div>
+				<div style="border-bottom: 10px solid transparent; border-left: 10px solid #f00; display: inline-block; position: absolute; left: 0px"></div>
+				<div style="border-bottom: 10px solid transparent; border-right: 10px solid #f00; display: inline-block; position: absolute; right: 0px; top: 0px"></div>
+				</a>
+			</div>
+    </body>
 </html>
