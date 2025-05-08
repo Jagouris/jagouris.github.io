@@ -38,10 +38,6 @@
 				height: 70px;
 			}
 			
-			#binder:hover {
-				background: linear-gradient(to right, gray, transparent)
-			}
-			
 			#title {
 				font-weight: bold;
 				font-size: 20px;
@@ -57,15 +53,19 @@
 				text-decoration: none;
 			}
 			
-			h1 {
+			.header {
 				font-family: "Cal Sans";
-				font-size: 46px;
+				font-weight: bold;
+				font-size: 40px;
+				color: #e0effc;
+				background: #000;
+				padding: 0px 10px 0px 10px;
 			}
         </style>
         
         <script type="text/javascript">
 			//https://developers.google.com/blogger/docs/3.0/reference/posts#resource
-		
+			
             let blog = {
                 id: "2354829316788835637",
                 key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
@@ -79,60 +79,60 @@
 				);
                 
 				fetch(request).then((response) => {
-					//console.log(response);
-				
 					response.json().then((data) => {
 						printPostList(data);
 					});
 				});
             }, false);
 			
-            /*window.addEventListener("load", () => {
-                let request = new XMLHttpRequest();
-                
-                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id + "/posts?fetchImages=true&key=" + blog.key, true)
-				request.responseType = "json";
-				request.send();
-                
-                request.onreadystatechange = () => {
-                    if(request.readyState == 4){
-						printPostList(request.response);
-                    }
-                }
-            }, false);*/
-            
             function printPostList(data){
                 let canvas = new OffscreenCanvas(70, 70);
-				let ctx = canvas.getContext("2d");
-				//let bounding = canvas.getBoundingClientRect();
-                ctx.fillRect(0,0,50,50)
+				let ctx = canvas.getContext("2d", {willReadFrequently: true});
+				
                 for(let post of data.items){
                     let binder = document.querySelector("#binder").cloneNode(true);
                     
                     binder.querySelector("#title").innerText = post.title;
                     binder.style.display = "block";
+					
 					document.body.appendChild(binder);
 					
 					let html = parser.parseFromString(post.content, "text/html");
-					
-					//console.log(post.images[0].url);
-					
-					if(post.images[0].url){
-						let request = new Request(post.images[0].url);
-						
-						fetch(request).then((response) => {
-							console.log(response);
-						});
-					
-						binder.querySelector("#thumbnail").src = post.images[0].url + "?key=" + blog.key;
-					}
-					
 					let img = binder.querySelector("#thumbnail");
 					
-					binder.querySelector("#thumbnail").addEventListener("load", ()=>{
+					if(post.images[0].url){
+						fetch(post.images[0].url)
+							.then((response) => {
+								return response.blob();
+							})
+							.then((imgBlob) => {
+								img.src = URL.createObjectURL(imgBlob);
+							});
+					}
+					
+					img.addEventListener("load", ()=>{
 						ctx.drawImage(img, 0, 0, 70, 70);
 						
-						//console.log(ctx.getImageData(0, 0, canvas.width, canvas.height));
+						let pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+						
+						let r = 0;
+						let g = 0;
+						let b = 0;
+						
+						for(let i = 0; i < pixels.data.length; i += 4){
+							r += pixels.data[i];
+							g += pixels.data[i+1];
+							b += pixels.data[i+2];
+						}
+						
+						r = parseInt(r / 4900);
+						g = parseInt(g / 4900);
+						b = parseInt(b / 4900);
+						
+						let hexCode = "#" + r.toString(16) + g.toString(16) + b.toString(16);
+						
+						binder.addEventListener("mouseover", () => binder.style.background = "linear-gradient(to right, " + hexCode + ", transparent)");
+						binder.addEventListener("mouseout", () => binder.style.background = "none");
 					}, false);
 					
 					let text = html.querySelector("p");
@@ -157,24 +157,21 @@
         </script>
     </head>
     <body>
-		<div style="width: 700px; margin: 0 auto; text-align: center; padding: 30px"><h1>Animation</h1></div>
+		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">Technology</span></div>
+		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">3D</span></div>
+		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">Animation</span></div>
+		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">Art</span></div>
 		
-		<canvas width="70" height="70" style="margin: 0 auto"></canvas>
-			<div id="binder" style="position: relative">
-				<!--<div style="display: inline-block; background: #f00; width: 70px; height: 70px">-->
-					<a href="post.htm">
-						<img id="thumbnail" width="70px" height="70px"/>
-					
-				<!--</div>-->
-				<div id="summary" style="width: 610px;  vertical-align: top;">
-					<p id="title"></p>
-					<p id="intro" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 7px; margin-left: 14px;"></p>
-				</div>
-				<div style="border-bottom: 10px solid transparent; border-left: 10px solid #f00; display: inline-block; position: absolute; left: 0px"></div>
-				<div style="border-bottom: 10px solid transparent; border-right: 10px solid #f00; display: inline-block; position: absolute; right: 0px; top: 0px"></div>
-				</a>
+		<div id="binder" style="position: relative">
+			<a>
+			<img id="thumbnail" width="70px" height="70px"/>
+			<div id="summary" style="width: 610px; vertical-align: top;">
+				<p id="title"></p>
+				<p id="intro" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 7px; margin-left: 14px;"></p>
 			</div>
+			<div style="border-bottom: 10px solid transparent; border-left: 10px solid #f00; display: inline-block; position: absolute; left: 0px"></div>
+			<div style="border-bottom: 10px solid transparent; border-right: 10px solid #f00; display: inline-block; position: absolute; right: 0px; top: 0px"></div>
+			</a>
+		</div>
     </body>
 </html>
-
-<!--https://stackoverflow.com/questions/74452866/how-preview-a-html-file-github-codespaces-->
