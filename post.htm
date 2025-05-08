@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Title</title>
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+        
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                font-family: "Open Sans";
+            }
+			
+			#thumbnail {
+				display: inline-block;
+			}
+			
+			#summary {
+				display: inline-block;
+				margin-left: 14px;
+			}
+			
+			#thumbnail {
+				border-radius: 4px;
+			}
+        </style>
+        
+        <script type="text/javascript">
+            let blog = {
+                id: "2354829316788835637",
+                key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
+            };
+			
+			let parser = new DOMParser();
+            
+            window.addEventListener("load", () => {
+                let request = new XMLHttpRequest();
+                
+                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts/" + window.location.search.match(/\d.*/)[0] + "?key=" + blog.key, true);
+                request.send();
+                
+                request.onreadystatechange = () => {
+                    if(request.readyState == 4){
+                        let data = JSON.parse(request.response);
+                        
+                        document.body.innerHTML = data.content;
+                    }
+                }
+            }, false);
+            
+            function getSpecificPost(){
+                let request = new XMLHttpRequest();
+                
+                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts?key=" + blog.key, true);
+                request.send();
+                
+                request.onreadystatechange = () => {
+                    if(request.readyState == 4) console.log(request.response);
+                }
+            }
+        </script>
+    </head>
+    <body>
+		
+    </body>
+</html>
