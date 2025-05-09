@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>Title</title>
+        <title>Jagouris</title>
         
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
             * {
                 margin: 0;
                 padding: 0;
-                font-family: "Open Sans";
+                font-family: Georgia;
             }
 			
 			body {
@@ -36,16 +36,27 @@
 				width: 700px;
 				display: none;
 				height: 70px;
+				position: relative;
+				border: 1px solid #000;
+				margin-top: 4px;
 			}
 			
 			#title {
 				font-weight: bold;
 				font-size: 20px;
 				padding-bottom: 2px;
-				border-bottom: 1px solid #000;
-				margin-top: 4px;
+				margin-top: 7px;
 				font-family: "Open Sans";
-				padding-left: 14px;
+				padding-left: 10px;
+			}
+			
+			#intro {
+				font-size: 15px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				margin-top: 3px;
+				margin-left: 10px;
 			}
 			
 			a {
@@ -61,11 +72,41 @@
 				background: #000;
 				padding: 0px 10px 0px 10px;
 			}
+			
+			.header-bay {
+				width: 700px;
+				margin: 0 auto;
+				padding: 10px;
+				text-align: center;
+			}
+			
+			.triangle {
+				display: inline-block;
+				position: absolute; 
+			}
+			
+			.triangle.top_left {
+				border-bottom: 7px solid transparent;
+				border-left: 7px solid #000;
+			}
+			
+			.triangle.top_right {
+				border-bottom: 7px solid transparent;
+				border-right: 7px solid #000;
+			}
+			
+			.triangle.bottom_right {
+				border-top: 7px solid transparent;
+				border-right: 7px solid #000;
+			}
+			
+			.triangle.bottom_left {
+				border-top: 7px solid transparent;
+				border-left: 7px solid #000; 
+			}
         </style>
         
         <script type="text/javascript">
-			//https://developers.google.com/blogger/docs/3.0/reference/posts#resource
-			
             let blog = {
                 id: "2354829316788835637",
                 key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
@@ -75,11 +116,16 @@
             
 			window.addEventListener("load", () => {
                 let request = new Request(
-					"https://www.googleapis.com/blogger/v3/blogs/" + blog.id + "/posts?fetchImages=true&key=" + blog.key
+					"https://www.googleapis.com/blogger/v3/blogs/" +
+					blog.id +
+					"/posts?fetchImages=true&fetchBodies=false&maxResults=100&key=" +
+					blog.key
 				);
                 
 				fetch(request).then((response) => {
 					response.json().then((data) => {
+						console.log(data);
+					
 						printPostList(data);
 					});
 				});
@@ -95,20 +141,20 @@
                     binder.querySelector("#title").innerText = post.title;
                     binder.style.display = "block";
 					
-					document.body.appendChild(binder);
+					let json = post.images[0].url.replaceAll("%20", " ");
+					json = JSON.parse(json);
 					
-					let html = parser.parseFromString(post.content, "text/html");
+					document.querySelector("#header-" + json.category).after(binder);
+					
 					let img = binder.querySelector("#thumbnail");
 					
-					if(post.images[0].url){
-						fetch(post.images[0].url)
-							.then((response) => {
-								return response.blob();
-							})
-							.then((imgBlob) => {
-								img.src = URL.createObjectURL(imgBlob);
-							});
-					}
+					fetch(json.thumbnail)
+						.then((response) => {
+							return response.blob();
+						})
+						.then((imgBlob) => {
+							img.src = URL.createObjectURL(imgBlob);
+						});
 					
 					img.addEventListener("load", ()=>{
 						ctx.drawImage(img, 0, 0, 70, 70);
@@ -119,15 +165,21 @@
 						let g = 0;
 						let b = 0;
 						
+						let count = 0;
+						
 						for(let i = 0; i < pixels.data.length; i += 4){
-							r += pixels.data[i];
-							g += pixels.data[i+1];
-							b += pixels.data[i+2];
+							if(pixels.data[i+3] == 255){
+								r += pixels.data[i];
+								g += pixels.data[i+1];
+								b += pixels.data[i+2];
+								
+								count++;
+							}
 						}
 						
-						r = parseInt(r / 4900);
-						g = parseInt(g / 4900);
-						b = parseInt(b / 4900);
+						r = parseInt(r / count);
+						g = parseInt(g / count);
+						b = parseInt(b / count);
 						
 						let hexCode = "#" + r.toString(16) + g.toString(16) + b.toString(16);
 						
@@ -135,8 +187,7 @@
 						binder.addEventListener("mouseout", () => binder.style.background = "none");
 					}, false);
 					
-					let text = html.querySelector("p");
-					if(text) binder.querySelector("#intro").innerText = text.innerText;
+					binder.querySelector("#intro").innerText = json.summary;
 					
 					for(let link of binder.querySelectorAll("A")){
 						link.href = link.href + "?id=" + post.id;
@@ -157,20 +208,22 @@
         </script>
     </head>
     <body>
-		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">Technology</span></div>
-		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">3D</span></div>
-		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">Animation</span></div>
-		<div style="width: 700px; margin: 0 auto; padding: 10px; text-align: center"><span class="header">Art</span></div>
+		<div id="header-technology" class="header-bay" style=""><span class="header">Technology</span></div>
+		<div id="header-3d" class="header-bay"><span class="header">3D</span></div>
+		<div id="header-animation" class="header-bay"><span class="header">Animation</span></div>
+		<div id="header-art" class="header-bay"><span class="header">Art</span></div>
 		
-		<div id="binder" style="position: relative">
-			<a href="post.htm">
-			<img id="thumbnail" width="70px" height="70px"/>
-			<div id="summary" style="width: 610px; vertical-align: top;">
-				<p id="title"></p>
-				<p id="intro" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 7px; margin-left: 14px;"></p>
-			</div>
-			<div style="border-bottom: 10px solid transparent; border-left: 10px solid #f00; display: inline-block; position: absolute; left: 0px"></div>
-			<div style="border-bottom: 10px solid transparent; border-right: 10px solid #f00; display: inline-block; position: absolute; right: 0px; top: 0px"></div>
+		<div id="binder">
+			<a>
+				<img id="thumbnail" width="70px" height="70px"/>
+				<div id="summary" style="width: 610px; vertical-align: top;">
+					<p id="title"></p>
+					<p id="intro"></p>
+				</div>
+				<div class="triangle top_left" style="left: 0px; top: 0px"></div>
+				<div class="triangle top_right" style="right: 0px; top: 0px"></div>
+				<div class="triangle bottom_right" style="right: 0px; bottom: 0px"></div>
+				<div class="triangle bottom_left" style="left: 0px; bottom: 0px"></div>
 			</a>
 		</div>
     </body>
