@@ -190,7 +190,7 @@
                     binder.querySelector("#intro").innerText = json.summary;
                     
                     for(let link of binder.querySelectorAll("A")){
-                        link.href = link.href + "?id=" + post.id;
+                        link.href = "post.htm?id=" + post.id;
                     }
                 }
             }
