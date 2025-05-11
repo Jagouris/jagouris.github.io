@@ -12,107 +12,13 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
         
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                font-family: Georgia;
-            }
-            
-            body {
-                background: #e0effc;
-            }
-            
-            #thumbnail {
-                display: inline-block;
-            }
-            
-            #summary {
-                display: inline-block;
-            }
-            
-            #binder {
-                margin: 0 auto;
-                width: 700px;
-                display: none;
-                height: 70px;
-                position: relative;
-                border: 1px solid #000;
-                margin-top: 4px;
-            }
-            
-            #title {
-                font-weight: bold;
-                font-size: 20px;
-                padding-bottom: 2px;
-                margin-top: 7px;
-                font-family: "Open Sans";
-                padding-left: 10px;
-            }
-            
-            #intro {
-                font-size: 15px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                margin-top: 3px;
-                margin-left: 10px;
-            }
-            
-            a {
-                color: #000;
-                text-decoration: none;
-            }
-            
-            .header {
-                font-family: "Cal Sans";
-                font-weight: bold;
-                font-size: 40px;
-                color: #e0effc;
-                background: #000;
-                padding: 0px 10px 0px 10px;
-            }
-            
-            .header-bay {
-                width: 700px;
-                margin: 0 auto;
-                padding: 10px;
-                text-align: center;
-            }
-            
-            .triangle {
-                display: inline-block;
-                position: absolute; 
-            }
-            
-            .triangle.top_left {
-                border-bottom: 7px solid transparent;
-                border-left: 7px solid #000;
-            }
-            
-            .triangle.top_right {
-                border-bottom: 7px solid transparent;
-                border-right: 7px solid #000;
-            }
-            
-            .triangle.bottom_right {
-                border-top: 7px solid transparent;
-                border-right: 7px solid #000;
-            }
-            
-            .triangle.bottom_left {
-                border-top: 7px solid transparent;
-                border-left: 7px solid #000; 
-            }
-        </style>
+        <link href="stylesheet.css" rel="stylesheet" />
         
         <script type="text/javascript">
             let blog = {
                 id: "2354829316788835637",
                 key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
             };
-            
-            let parser = new DOMParser();
             
             window.addEventListener("load", () => {
                 let request = new Request(
@@ -136,17 +42,17 @@
                 let ctx = canvas.getContext("2d", {willReadFrequently: true});
                 
                 for(let post of data.items){
-                    let binder = document.querySelector("#binder").cloneNode(true);
+                    let entry = document.querySelector("#entry").cloneNode(true);
                     
-                    binder.querySelector("#title").innerText = post.title;
-                    binder.style.display = "block";
+                    entry.querySelector("#title").innerText = post.title;
+                    entry.style.display = "block";
                     
                     let json = post.images[0].url.replaceAll("%20", " ");
                     json = JSON.parse(json);
                     
-                    document.querySelector("#header-" + json.category).after(binder);
+                    document.querySelector("#section-" + json.category).appendChild(entry);
                     
-                    let img = binder.querySelector("#thumbnail");
+                    let img = entry.querySelector("#thumbnail");
                     
                     fetch(json.thumbnail)
                         .then((response) => {
@@ -157,6 +63,7 @@
                         });
                     
                     img.addEventListener("load", ()=>{
+                        ctx.clearRect(0, 0, 70, 70);
                         ctx.drawImage(img, 0, 0, 70, 70);
                         
                         let pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -168,13 +75,11 @@
                         let count = 0;
                         
                         for(let i = 0; i < pixels.data.length; i += 4){
-                            if(pixels.data[i+3] == 255){
-                                r += pixels.data[i];
-                                g += pixels.data[i+1];
-                                b += pixels.data[i+2];
-                                
-                                count++;
-                            }
+                            r += pixels.data[i] * (pixels.data[i+3] / 255);
+                            g += pixels.data[i+1] * (pixels.data[i+3] / 255);
+                            b += pixels.data[i+2] * (pixels.data[i+3] / 255);
+                            
+                            count++;
                         }
                         
                         r = parseInt(r / count);
@@ -183,37 +88,33 @@
                         
                         let hexCode = "#" + r.toString(16) + g.toString(16) + b.toString(16);
                         
-                        binder.addEventListener("mouseover", () => binder.style.background = "linear-gradient(to right, " + hexCode + ", transparent)");
-                        binder.addEventListener("mouseout", () => binder.style.background = "none");
+                        entry.addEventListener("mouseover", () => entry.style.background = "linear-gradient(to right, " + hexCode + ", transparent)");
+                        entry.addEventListener("mouseout", () => entry.style.background = "none");
                     }, false);
                     
-                    binder.querySelector("#intro").innerText = json.summary;
+                    entry.querySelector("#intro").innerText = json.summary;
                     
-                    for(let link of binder.querySelectorAll("A")){
+                    for(let link of entry.querySelectorAll("A")){
                         link.href = "post.htm?id=" + post.id;
                     }
-                }
-            }
-            
-            function getSpecificPost(){
-                let request = new XMLHttpRequest();
-                
-                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts?key=" + blog.key, true);
-                request.send();
-                
-                request.onreadystatechange = () => {
-                    //if(request.readyState == 4) console.log(request.response);
                 }
             }
         </script>
     </head>
     <body>
-        <div id="header-technology" class="header-bay" style=""><span class="header">Technology</span></div>
-        <div id="header-3d" class="header-bay"><span class="header">3D</span></div>
-        <div id="header-animation" class="header-bay"><span class="header">Animation</span></div>
-        <div id="header-art" class="header-bay"><span class="header">Art</span></div>
+        <div class="header-bay" style=""><span class="header">Technology</span></div>
+        <ul id="section-technology"></ul>
         
-        <div id="binder">
+        <div class="header-bay"><span class="header">3D</span></div>
+        <ul id="section-3d"></ul>
+        
+        <div class="header-bay"><span class="header">Animation</span></div>
+        <ul id="section-animation"></ul>
+        
+        <div class="header-bay"><span class="header">Art</span></div>
+        <ul id="section-art"></ul>
+        
+        <div id="entry">
             <a>
                 <img id="thumbnail" width="70px" height="70px"/>
                 <div id="summary" style="width: 610px; vertical-align: top;">
@@ -226,5 +127,19 @@
                 <div class="triangle bottom_left" style="left: 0px; bottom: 0px"></div>
             </a>
         </div>
+        
+        <div style="height: 42px"/>
+        
+        <!-- Place this tag in your head or just before your close body tag. -->
+        <script async defer src="https://buttons.github.io/buttons.js"></script>
+        
+        <div style="width: 100%; height: 37px; margin: 0 auto; margin-top: 20px; margin-bottom: 20px; background: #000; position: fixed; bottom: -20px; padding: 5px; box-sizing: border-box;">
+            <span class="header" style="color: #fff; background: none; font-weight: normal; font-size: 20px;">Jagouris Digital Art Portfolio</span>
+            
+            <span style="float: right">
+                <a class="github-button" href="https://github.com/jagouris" data-color-scheme="no-preference: light; light: light; dark: dark;" data-size="large" aria-label="Follow @jagouris on GitHub">Follow @jagouris</a>
+            </span>
+        </div>
+    
     </body>
 </html>
