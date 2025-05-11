@@ -8,25 +8,49 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
         
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+        
+        <link href="stylesheet.css" rel="stylesheet" />
+        
         <style>
-            * {
-                margin: 0;
-                padding: 0;
-                font-family: "Open Sans";
+            #thumbnail {
+                display: inline-block;
             }
-			
-			#thumbnail {
-				display: inline-block;
-			}
-			
-			#summary {
-				display: inline-block;
-				margin-left: 14px;
-			}
-			
-			#thumbnail {
-				border-radius: 4px;
-			}
+            
+            #summary {
+                display: inline-block;
+                margin-left: 14px;
+            }
+            
+            #post {
+                margin: 0 auto;
+                width: 700px;
+                position: relative;
+                border: 1px solid #000;
+                margin-top: 4px;
+                padding: 28px 14px 28px 14px;
+                font-size: 15px;
+            }
+            
+            #thumbnail {
+                border-radius: 4px;
+            }
+            
+            .header {
+                font-family: "Cal Sans";
+                font-weight: bold;
+                font-size: 30px;
+                color: #e0effc;
+                background: #000;
+                padding: 0px 10px 0px 10px;
+            }
+            
+            p {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
         </style>
         
         <script type="text/javascript">
@@ -34,8 +58,8 @@
                 id: "2354829316788835637",
                 key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
             };
-			
-			let parser = new DOMParser();
+            
+            let parser = new DOMParser();
             
             window.addEventListener("load", () => {
                 let request = new XMLHttpRequest();
@@ -47,7 +71,49 @@
                     if(request.readyState == 4){
                         let data = JSON.parse(request.response);
                         
-                        document.body.innerHTML = data.content;
+                        document.querySelector("#title").innerText = data.title;
+                        
+                        let content = parser.parseFromString(data.content, "text/html");;
+                        //content.innerHTML = data.content;
+                        
+                        let children = content.body.children;
+                        
+                        children[0].remove();
+                        
+                        for(let node of children){
+                            let newNode = node.cloneNode(true);
+                            
+                            if(newNode.tagName != "P"){
+                                newNode.style.padding = "0";
+                                newNode.style.marginTop = "10px";
+                                newNode.style.marginBottom = "10px";
+                                newNode.style.maxWidth = "100%";
+                            }
+                            
+                            document.querySelector("#content").appendChild(newNode);
+                            
+                            newNode.addEventListener("load", () => {
+                                newNode.style.maxWidth = "100%";
+                            }, false);
+                        }
+                        
+                        
+                        /*for(let node of children){
+                            console.log(node);
+                        
+                            let newNode = document.querySelector("#content").appendChild(node);
+                            
+                            
+                        }*/
+                        
+                        /*while(true){
+                            setTimeout(()=>{}, 500);
+                            
+                            if(content.children.length > 0) break;
+                        }
+                        
+                        console.log("load");
+                        console.log(content.querySelector("IMAGE"));*/
                     }
                 }
             }, false);
@@ -65,6 +131,27 @@
         </script>
     </head>
     <body>
-		
+        <div id="post">
+            <span id="title" class="header" ></span>
+            <div id="content" style="padding-top: 10px"></div>
+            
+            <div class="triangle top_left" style="left: 0px; top: 0px"></div>
+            <div class="triangle top_right" style="right: 0px; top: 0px"></div>
+            <div class="triangle bottom_right" style="right: 0px; bottom: 0px"></div>
+            <div class="triangle bottom_left" style="left: 0px; bottom: 0px"></div>
+        </div>
+        
+        <div style="height: 42px"/>
+        
+        <!-- Place this tag in your head or just before your close body tag. -->
+        <script async defer src="https://buttons.github.io/buttons.js"></script>
+        
+        <div style="width: 100%; height: 37px; margin: 0 auto; margin-top: 20px; margin-bottom: 20px; background: #000; position: fixed; bottom: -20px; padding: 5px; box-sizing: border-box;">
+            <span class="header" style="color: #fff; background: none; font-weight: normal; font-size: 20px;">Jagouris Digital Art Portfolio</span>
+            
+            <span style="float: right">
+                <a class="github-button" href="https://github.com/jagouris" data-color-scheme="no-preference: light; light: light; dark: dark;" data-size="large" aria-label="Follow @jagouris on GitHub">Follow @jagouris</a>
+            </span>
+        </div>
     </body>
 </html>
