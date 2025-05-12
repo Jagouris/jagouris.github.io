@@ -30,9 +30,8 @@
                 position: relative;
                 border: 1px solid #000;
                 margin-top: 4px;
-                padding: 28px 14px 28px 14px;
                 font-size: 15px;
-		background: #fff;
+				background: #fff;
             }
             
             #thumbnail {
@@ -68,7 +67,7 @@
             window.addEventListener("load", () => {
                 let request = new XMLHttpRequest();
                 
-                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts/" + window.location.search.match(/\d.*/)[0] + "?key=" + blog.key, true);
+                request.open("GET", "https://www.googleapis.com/blogger/v3/blogs/" + blog.id +"/posts/" + window.location.search.match(/\d.*/)[0] + "?key=" + blog.key + "&fetchImages=true", true);
                 request.send();
                 
                 request.onreadystatechange = () => {
@@ -81,7 +80,7 @@
                         //content.innerHTML = data.content;
                         
                         let children = content.body.children;
-                        
+						
                         children[0].remove();
                         
                         for(let node of children){
@@ -101,6 +100,10 @@
                             }, false);
                         }
                         
+						let imgData = data.images[0].url.replaceAll("%20", " ");
+						imgData = JSON.parse(imgData);
+						
+						document.querySelector("#intro").innerText = imgData.summary;
                         
                         /*for(let node of children){
                             console.log(node);
@@ -136,8 +139,14 @@
     </head>
     <body>
         <div id="post">
-            <span id="title" class="header" ></span>
-            <div id="content" style="padding-top: 10px"></div>
+			<div id="title-bay" style="width: 100%; border-bottom: 1px solid #000; padding: 28px 14px 10px 14px;">
+				<span id="title" class="header" ></span>
+				<p id="intro" style="margin: 0; margin-top: 10px; font-weight: bold"></p>
+			</div>
+			<div id="content-bay" style="padding: 10px 14px 28px 14px;">
+				<div id="content"></div>
+				<a href="index.html" ><p style="margin-top: 20px; font-weight: normal">&#171; back</p></a>
+			</div>
             
             <div class="triangle top_left" style="left: 0px; top: 0px"></div>
             <div class="triangle top_right" style="right: 0px; top: 0px"></div>
