@@ -71,6 +71,7 @@
                         let r = 0;
                         let g = 0;
                         let b = 0;
+                        let a = 0;
                         
                         let count = 0;
                         
@@ -78,15 +79,43 @@
                             r += pixels.data[i] * (pixels.data[i+3] / 255);
                             g += pixels.data[i+1] * (pixels.data[i+3] / 255);
                             b += pixels.data[i+2] * (pixels.data[i+3] / 255);
+                            a += pixels.data[i+3];
                             
                             count++;
                         }
                         
-                        r = parseInt(r / count);
-                        g = parseInt(g / count);
-                        b = parseInt(b / count);
+                        a = parseInt(a / count) / 255;
+                        count *= a;
                         
-                        let hexCode = "#" + r.toString(16) + g.toString(16) + b.toString(16);
+                        r = r / count;
+                        g = g / count;
+                        b = b / count;
+                        
+                        //1 is complete saturate and 0 is original saturate
+                        let saturation = 0.8;
+                        
+                        let dark = Math.min(r, g, b);
+                        
+                        r = r - (dark * saturation);
+                        g = g - (dark * saturation);
+                        b = b - (dark * saturation);
+                        
+                        let light = Math.max(r, g, b) / 255;
+                        
+                        r = r / light;
+                        g = g / light;
+                        b = b / light;
+                    
+                        //1 is no shade 0 is full shade
+                        let shade = 0.7;
+                    
+                        r = parseInt(r * shade);
+                        g = parseInt(g * shade);
+                        b = parseInt(b * shade);
+                        
+                        let hexCode = `rgb(${r}, ${g}, ${b})`;
+                        
+                        console.log(hexCode);
                         
                         entry.addEventListener("mouseover", () => entry.style.background = "linear-gradient(to right, " + hexCode + ", transparent)");
                         entry.addEventListener("mouseout", () => entry.style.background = "none");
@@ -116,7 +145,7 @@
         
         <div id="entry">
             <a style="text-decoration: none">
-				<div style="position: absolute; width: 100%; height: 50%; border-bottom: 1px solid #000"></div>
+                <div style="position: absolute; width: 630px; height: 50%; border-bottom: 1px dashed #000; right: 0px"></div>
                 <img id="thumbnail" width="70px" height="70px" style="position: relative"/>
                 <div id="summary" style="width: 610px; vertical-align: top;">
                     <p id="title"></p>
