@@ -6,8 +6,7 @@
 
 body {
     background-size: auto 700px ;
-    background: #e0effc;/*#e0effc; #e0effc*/
-    /*background: linear-gradient(#e0effc 80%, black) fixed;*/
+    background: #e0effc;
 }
 
 #thumbnail {
@@ -25,7 +24,6 @@ body {
     height: 70px;
     position: relative;
     margin-top: 4px;
-    background: #e0effc;
 }
 
 #title {
@@ -45,7 +43,7 @@ body {
     text-overflow: ellipsis;
     margin-top: 5px;
     margin-left: 10px;
-	font-family: Georgia;
+    font-family: Georgia;
 }
 
 a {
@@ -58,6 +56,7 @@ a {
     font-weight: bold;
     font-size: 40px;
     padding: 0px 10px 0px 10px;
+    user-select: none;
 }
 
 .header-bay {
@@ -73,7 +72,7 @@ a {
 }
 
 .triangle.red {
-	border-bottom: 14px solid transparent;
+    border-bottom: 14px solid transparent;
     border-left: 14px solid #f00;
 }
 
