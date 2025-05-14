@@ -1,1 +1,0 @@
-# jagurak.github.io
