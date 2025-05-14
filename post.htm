@@ -31,7 +31,7 @@
                 border: 1px solid #000;
                 margin-top: 4px;
                 font-size: 15px;
-				background: #fff;
+                background: #fff;
             }
             
             #thumbnail {
@@ -45,17 +45,19 @@
                 color: #fff;
                 background: #000;
                 padding: 0px 10px 0px 10px;
+                margin-left: 14px;
             }
             
             p {
                 margin-top: 10px;
                 margin-bottom: 10px;
             }
-			li {
-				margin-left: 20px;
-			}
+            li {
+                margin-left: 20px;
+            }
         </style>
         
+        <script src="img_color.js"></script>
         <script type="text/javascript">
             let blog = {
                 id: "2354829316788835637",
@@ -76,11 +78,10 @@
                         
                         document.querySelector("#title").innerText = data.title;
                         
-                        let content = parser.parseFromString(data.content, "text/html");;
-                        //content.innerHTML = data.content;
+                        let content = parser.parseFromString(data.content, "text/html");
                         
                         let children = content.body.children;
-						
+                        
                         children[0].remove();
                         
                         for(let node of children){
@@ -100,27 +101,29 @@
                             }, false);
                         }
                         
-						let imgData = data.images[0].url.replaceAll("%20", " ");
-						imgData = JSON.parse(imgData);
-						
-						document.querySelector("#intro").innerText = imgData.summary;
+                        let imgData = data.images[0].url.replaceAll("%20", " ");
+                        imgData = JSON.parse(imgData);
                         
-                        /*for(let node of children){
-                            console.log(node);
+                        document.querySelector("#intro").innerText = imgData.summary;
                         
-                            let newNode = document.querySelector("#content").appendChild(node);
+                        let canvas = new OffscreenCanvas(70, 70);
+                        let ctx = canvas.getContext("2d");
+                        
+                        let thumbnail = new Image();
+                        
+                        fetch(imgData.thumbnail)
+                            .then((response) => {
+                                return response.blob();
+                            })
+                            .then((imgBlob) => {
+                                thumbnail.src = URL.createObjectURL(imgBlob);
+                            });
+                        
+                        thumbnail.addEventListener("load", ()=>{
+                            ctx.drawImage(thumbnail, 0, 0, 70, 70);
                             
-                            
-                        }*/
-                        
-                        /*while(true){
-                            setTimeout(()=>{}, 500);
-                            
-                            if(content.children.length > 0) break;
-                        }
-                        
-                        console.log("load");
-                        console.log(content.querySelector("IMAGE"));*/
+                            document.querySelector("#bg").style.backgroundImage = "linear-gradient(transparent , " + extractColor(ctx, 70, 70, 0.7, 0.8) + " 80%)";
+                        }, false);
                     }
                 }
             }, false);
@@ -138,15 +141,20 @@
         </script>
     </head>
     <body>
+        <div id="bg" style="width: 702px; height: 300px; margin: 0 auto; margin-top: 50px">
+        
+        </div>
+        
+        <div id="title-bay" style="width: 700px; margin: 0 auto; padding: 28px 14px 10px 14px; margin-top: -350px">
+            <span id="title" class="header" ></span>
+            <p id="intro" style="margin: 0; margin-top: 10px; margin-left: 14px; font-weight: bold"></p>
+        </div>
+    
         <div id="post">
-			<div id="title-bay" style="width: 100%; border-bottom: 1px solid #000; padding: 28px 14px 10px 14px;">
-				<span id="title" class="header" ></span>
-				<p id="intro" style="margin: 0; margin-top: 10px; font-weight: bold"></p>
-			</div>
-			<div id="content-bay" style="padding: 10px 14px 28px 14px;">
-				<div id="content"></div>
-				<a href="index.html" ><p style="margin-top: 20px; font-weight: normal">&#171; back</p></a>
-			</div>
+            <div id="content-bay" style="padding: 10px 14px 28px 14px;">
+                <div id="content"></div>
+                <a href="index.html" ><p style="margin-top: 34px;">&#171; GO BACK</p></a>
+            </div>
             
             <div class="triangle top_left" style="left: 0px; top: 0px"></div>
             <div class="triangle top_right" style="right: 0px; top: 0px"></div>
