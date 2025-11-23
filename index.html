@@ -1,1 +1,176 @@
-<script>window.location.assign("http://159.65.26.139/");</script>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Jagouris</title>
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap" rel="stylesheet">
+        
+        <link href="stylesheet.css" rel="stylesheet" />
+        
+        <script type="text/javascript">
+            let blog = {
+                id: "2354829316788835637",
+                key: "AIzaSyBcZI6ecgH2-nh80_AnmTC4HPPO2XYgFPc"
+            };
+            
+            window.addEventListener("load", () => {
+                let request = new Request(
+                    "https://www.googleapis.com/blogger/v3/blogs/" +
+                    blog.id +
+                    "/posts?fetchImages=true&fetchBodies=false&maxResults=100&key=" +
+                    blog.key
+                );
+                
+                fetch(request).then((response) => {
+                    response.json().then((data) => {
+                        console.log(data);
+                    
+                        printPostList(data);
+                    });
+                });
+            }, false);
+            
+            function printPostList(data){
+                let canvas = new OffscreenCanvas(70, 70);
+                let ctx = canvas.getContext("2d", {willReadFrequently: true});
+                
+                for(let post of data.items){
+                    let entry = document.querySelector("#entry").cloneNode(true);
+                    
+                    entry.querySelector("#title").innerText = post.title;
+                    entry.style.display = "block";
+                    
+                    let json = post.images[0].url.replaceAll("%20", " ");
+                    json = JSON.parse(json);
+                    
+                    document.querySelector("#section-" + json.category).appendChild(entry);
+                    
+                    let img = entry.querySelector("#thumbnail");
+                    
+                    fetch(json.thumbnail)
+                        .then((response) => {
+                            return response.blob();
+                        })
+                        .then((imgBlob) => {
+                            img.src = URL.createObjectURL(imgBlob);
+                        });
+                    
+                    img.addEventListener("load", ()=>{
+                        ctx.clearRect(0, 0, 70, 70);
+                        ctx.drawImage(img, 0, 0, 70, 70);
+                        
+                        let pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        
+                        let r = 0;
+                        let g = 0;
+                        let b = 0;
+                        let a = 0;
+                        
+                        let count = 0;
+                        
+                        for(let i = 0; i < pixels.data.length; i += 4){
+                            r += pixels.data[i] * (pixels.data[i+3] / 255);
+                            g += pixels.data[i+1] * (pixels.data[i+3] / 255);
+                            b += pixels.data[i+2] * (pixels.data[i+3] / 255);
+                            a += pixels.data[i+3];
+                            
+                            count++;
+                        }
+                        
+                        a = parseInt(a / count) / 255;
+                        count *= a;
+                        
+                        r = r / count;
+                        g = g / count;
+                        b = b / count;
+                        
+                        //1 is complete saturate and 0 is original saturate
+                        let saturation = 0.8;
+                        
+                        let dark = Math.min(r, g, b);
+                        
+                        r = r - (dark * saturation);
+                        g = g - (dark * saturation);
+                        b = b - (dark * saturation);
+                        
+                        let light = Math.max(r, g, b) / 255;
+                        
+                        r = r / light;
+                        g = g / light;
+                        b = b / light;
+                    
+                        //1 is no shade 0 is full shade
+                        let shade = 0.7;
+                    
+                        r = parseInt(r * shade);
+                        g = parseInt(g * shade);
+                        b = parseInt(b * shade);
+                        
+                        let hexCode = `rgb(${r}, ${g}, ${b})`;
+                        
+                        console.log(hexCode);
+                        
+                        entry.addEventListener("mouseover", () => entry.style.background = "linear-gradient(to right, " + hexCode + ", transparent)");
+                        entry.addEventListener("mouseout", () => entry.style.background = "none");
+                    }, false);
+                    
+                    entry.querySelector("#intro").innerText = json.summary;
+                    
+                    for(let link of entry.querySelectorAll("A")){
+                        link.href = "post.htm?id=" + post.id;
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div class="header-bay" style=""><span class="header">Technology</span></div>
+        <ul id="section-technology"></ul>
+        
+        <div class="header-bay"><span class="header">3D</span></div>
+        <ul id="section-3d"></ul>
+        
+        <div class="header-bay"><span class="header">Animation</span></div>
+        <ul id="section-animation"></ul>
+        
+        <div class="header-bay"><span class="header">Art</span></div>
+        <ul id="section-art"></ul>
+        
+        <div id="entry">
+            <a style="text-decoration: none">
+                <div style="position: absolute; width: 630px; height: 50%; border-bottom: 1px dashed #000; right: 0px"></div>
+                <img id="thumbnail" width="70px" height="70px" style="position: relative"/>
+                <div id="summary" style="width: 610px; vertical-align: top;">
+                    <p id="title"></p>
+                    <p id="intro"></p>
+                </div>
+                <div class="triangle red" style="left: 0px; top: 0px"></div>
+            </a>
+        </div>
+        
+        <div style="padding: 42px">
+		<!--<p style="text-align: center; font-size: 12px">Powered by: <a href="https://www.blogger.com/"><img src="blogger.svg" width="80px" style="vertical-align: middle; margin-left: 5px"></img></a></p>-->
+        </div>
+
+	<p>Website written and designed by Mitchell Graham</p>
+	
+        <!-- Place this tag in your head or just before your close body tag. -->
+        <script async defer src="https://buttons.github.io/buttons.js"></script>
+        
+        <div style="width: 100%; height: 37px; margin: 0 auto; margin-top: 20px; margin-bottom: 20px; background: #000; position: fixed; bottom: -20px; padding: 5px; box-sizing: border-box;">
+            <span class="header" style="color: #fff; background: none; font-weight: normal; font-size: 20px;">Jagouris Digital Art Portfolio</span>
+            
+            <span style="float: right">
+                <a class="github-button" href="https://github.com/jagouris" data-color-scheme="no-preference: light; light: light; dark: dark;" data-size="large" aria-label="Follow @jagouris on GitHub">Follow @jagouris</a>
+            </span>
+        </div>
+    
+    </body>
+</html>
